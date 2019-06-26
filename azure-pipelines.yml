@@ -17,7 +17,7 @@ variables:
   DOCKER_FOLDER_TAR_FOLDER: '$(Pipeline.Workspace)/dockercache'
   DOCKER_FOLDER_TAR: '$(DOCKER_FOLDER_TAR_FOLDER)/docker.tar'
   DOCKER_COMMAND: 'docker build --rm=false -f Dockerfile -t $(imageName) .'
-  TIMES_I_MESSED_UP: 9
+  TIMES_I_MESSED_UP: 10
   skipComponentGovernanceDetection: true
 
 
@@ -38,7 +38,6 @@ steps:
 - script: |
     docker build --target build --tag gradle-sample-app:master .
   displayName: 'Build target'
-  condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
 
 - script: docker build --cache-from gradle-sample-app:master .
   displayName: "Build final image"
