@@ -17,7 +17,7 @@ variables:
   DOCKER_FOLDER_TAR_FOLDER: '$(Pipeline.Workspace)/dockercache'
   DOCKER_FOLDER_TAR: '$(DOCKER_FOLDER_TAR_FOLDER)/docker.tar'
   DOCKER_COMMAND: 'docker build --rm=false -f Dockerfile -t $(imageName) .'
-  TIMES_I_MESSED_UP: 7
+  TIMES_I_MESSED_UP: 8
 
 
 steps:
@@ -36,9 +36,16 @@ steps:
 
 - script: |
     docker build --target build --tag gradle-sample-app:master .
-    mkdir -p $(DOCKER_FOLDER_TAR_FOLDER)
-    docker save -o $(DOCKER_FOLDER_TAR) gradle-sample-app:master
   displayName: 'Build target'
+  condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
+
+- script: docker build --cache-from gradle-sample-app:master .
+  displayName: "Build final image"
+
+- script: |
+    mkdir -p $(DOCKER_FOLDER_TAR_FOLDER)
+    docker save -o $(DOCKER_FOLDER_TAR) gradle-sample-app:master openjdk:8-jre-slim gradle:4.7.0-jdk8-alpine
+  displayName: 'Export images'
   condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
 
 - task: SaveCache@0
@@ -48,6 +55,3 @@ steps:
       TIMES_I_MESSED_UP = $(TIMES_I_MESSED_UP)
     path: $(DOCKER_FOLDER_TAR_FOLDER)
   condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
-
-- script: docker build --cache-from gradle-sample-app:master .
-  displayName: "Build final image"
