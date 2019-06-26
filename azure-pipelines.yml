@@ -17,7 +17,8 @@ variables:
   DOCKER_FOLDER_TAR_FOLDER: '$(Pipeline.Workspace)/dockercache'
   DOCKER_FOLDER_TAR: '$(DOCKER_FOLDER_TAR_FOLDER)/docker.tar'
   DOCKER_COMMAND: 'docker build --rm=false -f Dockerfile -t $(imageName) .'
-  TIMES_I_MESSED_UP: 8
+  TIMES_I_MESSED_UP: 9
+  skipComponentGovernanceDetection: true
 
 
 steps:
