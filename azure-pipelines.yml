@@ -49,5 +49,5 @@ steps:
     path: $(DOCKER_FOLDER_TAR_FOLDER)
   condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
 
-- script: docker build --cahce-from gradle-sample-app:master .
+- script: docker build --cache-from gradle-sample-app:master .
   displayName: "Build final image"
