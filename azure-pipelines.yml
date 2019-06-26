@@ -9,9 +9,43 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: docker build --target build --tag gradle-sample-app:master .
-  displayName: 'Build target'
+variables:
+  imageName: 'your-container-image-name'
+  system.debug: 'true'
+  agent.diagnostic: 'true'
+  DOCKER_FOLDER: '/var/lib/docker'
+  DOCKER_FOLDER_TAR_FOLDER: '$(Pipeline.Workspace)/dockercache'
+  DOCKER_FOLDER_TAR: '$(DOCKER_FOLDER_TAR_FOLDER)/docker.tar'
+  DOCKER_COMMAND: 'docker build --rm=false -f Dockerfile -t $(imageName) .'
+  TIMES_I_MESSED_UP: 7
 
-- script: docker build .
+
+steps:
+
+- task: RestoreCache@0
+  inputs:
+    key: |
+      $(System.DefaultWorkingDirectory)/DockerFile
+      TIMES_I_MESSED_UP = $(TIMES_I_MESSED_UP)
+    path: '$(DOCKER_FOLDER_TAR_FOLDER)'
+    cacheHitVar: 'DockerCacheHit'
+
+- script: docker load -i $(DOCKER_FOLDER_TAR)
+  condition: and(succeeded(), eq(variables['PipelineCache.DockerCacheHit'], 'True'))
+
+- script: |
+    docker build --target build --tag gradle-sample-app:master .
+    docker save -o $(DOCKER_FOLDER_TAR) gradle-sameple-app:master
+  displayName: 'Build target'
+  condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
+
+- task: SaveCache@0
+  inputs:
+    key: |
+      $(System.DefaultWorkingDirectory)/DockerFile
+      TIMES_I_MESSED_UP = $(TIMES_I_MESSED_UP)
+    path: $(DOCKER_FOLDER_TAR_FOLDER)
+  condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
+
+- script: docker build --cahce-from gradle-sample-app:master .
   displayName: "Build final image"
