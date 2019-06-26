@@ -35,6 +35,7 @@ steps:
 
 - script: |
     docker build --target build --tag gradle-sample-app:master .
+    mkdir -p $(DOCKER_FOLDER_TAR_FOLDER)
     docker save -o $(DOCKER_FOLDER_TAR) gradle-sameple-app:master
   displayName: 'Build target'
   condition: and(succeeded(), ne(variables['PipelineCache.DockerCacheHit'], 'True'))
